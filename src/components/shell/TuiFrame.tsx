@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Profile } from '@/lib/content/collections';
+import { KeyboardNav } from './KeyboardNav';
 import { ShellHeader } from './ShellHeader';
 import { StatusLine } from './StatusLine';
 
@@ -14,6 +15,7 @@ export function TuiFrame({ profile, children }: { profile: Profile; children: Re
         {children}
       </main>
       <StatusLine uptime={profile.uptime} />
+      <KeyboardNav />
     </div>
   );
 }

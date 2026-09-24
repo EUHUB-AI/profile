@@ -211,3 +211,23 @@ kbd {
     order: 4;
   }
 }
+
+.help {
+  max-width: min(48ch, calc(100vw - 2rem));
+  padding: 1.5rem 3ch;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.help::backdrop {
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
+}
+
+.hint {
+  cursor: pointer;
+}
+
+.hint:hover {
+  color: var(--warn);
+}
