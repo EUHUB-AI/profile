@@ -7,7 +7,6 @@ export function MotdPlayback() {
     const root = document.documentElement;
     if (!('motdPlay' in root.dataset)) return;
     const lines = document.querySelectorAll('.motd-line');
-    const last = lines[lines.length - 1];
 
     function stop() {
       delete root.dataset.motdPlay;
@@ -16,12 +15,12 @@ export function MotdPlayback() {
     function cleanup() {
       window.removeEventListener('keydown', stop);
       window.removeEventListener('pointerdown', stop);
-      last?.removeEventListener('animationend', stop);
+      clearTimeout(timer);
     }
 
+    const timer = setTimeout(stop, lines.length * 70 + 100);
     window.addEventListener('keydown', stop);
     window.addEventListener('pointerdown', stop);
-    last?.addEventListener('animationend', stop);
     return cleanup;
   }, []);
 
