@@ -3,14 +3,15 @@ import { countryCount, hostName } from './travel';
 
 export interface MotdSummary {
   reading: number;
-  nowReading?: { title: string; progress: number; slug: string };
+  nowReading?: { title: string; progress: number; slug: string; sample: boolean };
   countries: number;
-  lastTrip?: { host: string; start: string; slug: string };
+  lastTrip?: { host: string; start: string; slug: string; sample: boolean };
   languagesRunning: number;
   languagesTotal: number;
-  streak?: { sport: string; days: number };
+  streak?: { sport: string; days: number; sample: boolean };
   hobbiesActive: number;
   hobbiesTotal: number;
+  samples: { books: boolean; trips: boolean; languages: boolean; sports: boolean; hobbies: boolean };
 }
 
 export function summarize(input: {
@@ -29,15 +30,29 @@ export function summarize(input: {
 
   return {
     reading: reading.length,
-    nowReading: current ? { title: current.title, progress: current.progress ?? 0, slug: current.slug } : undefined,
+    nowReading: current
+      ? { title: current.title, progress: current.progress ?? 0, slug: current.slug, sample: current.sample }
+      : undefined,
     countries: countryCount(input.trips),
     lastTrip: lastTrip
-      ? { host: hostName(lastTrip.cities[0].name, lastTrip.countryCode), start: lastTrip.start, slug: lastTrip.slug }
+      ? {
+          host: hostName(lastTrip.cities[0].name, lastTrip.countryCode),
+          start: lastTrip.start,
+          slug: lastTrip.slug,
+          sample: lastTrip.sample,
+        }
       : undefined,
     languagesRunning: input.languages.filter((l) => l.level !== l.target).length,
     languagesTotal: input.languages.length,
-    streak: streakSport ? { sport: streakSport.name, days: streakSport.streakDays ?? 0 } : undefined,
+    streak: streakSport ? { sport: streakSport.name, days: streakSport.streakDays ?? 0, sample: streakSport.sample } : undefined,
     hobbiesActive: input.hobbies.filter((h) => h.state === 'active').length,
     hobbiesTotal: input.hobbies.length,
+    samples: {
+      books: input.books.some((b) => b.sample),
+      trips: input.trips.some((t) => t.sample),
+      languages: input.languages.some((l) => l.sample),
+      sports: input.sports.some((s) => s.sample),
+      hobbies: input.hobbies.some((h) => h.sample),
+    },
   };
 }

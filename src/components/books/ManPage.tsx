@@ -56,9 +56,12 @@ export function ManPage({ book, related }: { book: Book; related: Book[] }) {
           <h2 className="man-h">SEE ALSO</h2>
           <p className="man-indent flex flex-wrap gap-x-[2ch]">
             {related.map((r) => (
-              <Link key={r.slug} href={`/books/${r.slug}`} data-nav-item className="link">
-                {r.slug}(7)
-              </Link>
+              <span key={r.slug}>
+                <Link href={`/books/${r.slug}`} data-nav-item className="link">
+                  {r.slug}(7)
+                </Link>
+                <SampleTag show={r.sample} />
+              </span>
             ))}
           </p>
         </section>
