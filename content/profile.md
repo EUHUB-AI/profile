@@ -4,6 +4,7 @@ handle: mike
 host: mike-g
 role: SRE & (Dev/AI/Sec Ops) Architect
 uptime: 100.00%
+siteUrl: https://mike.euhub.co
 home:
   city: Bratislava
   countryCode: SK

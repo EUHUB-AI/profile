@@ -11,7 +11,7 @@ npm test        # unit tests + content validation
 npm run build   # production build (fails on invalid content)
 ```
 
-Pushing to `main` deploys to Cloud Run. Work on a branch.
+Deploys are manual: Actions → **Deploy to Azure Container Apps** → **Run workflow**. Pushing to `main` deploys nothing. The one-time Azure setup and the `mike.euhub.co` domain steps are in [`infra/README.md`](infra/README.md). Project history and context are in [`docs/CONTEXT.md`](docs/CONTEXT.md).
 
 ## Editing content
 
@@ -24,7 +24,7 @@ If a file is invalid, `npm test` and `npm run build` fail with the file name and
 ### Before going live
 
 - Replace every sample entry. `grep -rl "sample: true" content/` lists them, and they show a `sample` tag on the site.
-- Set `siteUrl` in `content/profile.md` (for example `https://your-domain`) to enable `sitemap.xml`.
+- `siteUrl` in `content/profile.md` is `https://mike.euhub.co`. Point the domain at the Container App before announcing it (see `infra/README.md`).
 - Check `home` in `content/profile.md`. It's the origin for travel distances and currently set to Bratislava.
 
 ### Fields
