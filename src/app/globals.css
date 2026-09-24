@@ -381,3 +381,63 @@ kbd {
     padding-left: 7ch;
   }
 }
+
+.dot {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  vertical-align: -0.05em;
+}
+
+.dot[data-state="done"] {
+  border-color: var(--fg);
+  background: var(--fg);
+}
+
+.dot[data-state="running"] {
+  border-color: var(--warn);
+  background: linear-gradient(90deg, var(--warn) 50%, transparent 50%);
+}
+
+.dot[data-state="pending"] {
+  border-color: var(--dim);
+}
+
+.dot[data-state="off"] {
+  border-color: var(--dim);
+  opacity: 0.45;
+}
+
+.row:focus-visible .dot {
+  border-color: var(--bg);
+}
+
+.row:focus-visible .dot[data-state="done"] {
+  background: var(--bg);
+}
+
+.row:focus-visible .dot[data-state="running"] {
+  background: linear-gradient(90deg, var(--bg) 50%, transparent 50%);
+}
+
+.stages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 0.25rem;
+}
+
+.stage {
+  white-space: nowrap;
+}
+
+.stage + .stage::before {
+  content: "";
+  display: inline-block;
+  width: 1.5ch;
+  margin: 0 0.75ch;
+  border-top: 1px solid var(--rule);
+  vertical-align: middle;
+}
