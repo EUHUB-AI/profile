@@ -13,15 +13,21 @@ export function WorldMap({ places, home }: { places: (Coord & { slug: string })[
       {model.dots.map((d) => (
         <circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={0.22} className="fill-dim opacity-50" />
       ))}
-      {model.pins.map((p) => (
-        <circle
-          key={`pin-${p.x}-${p.y}`}
-          cx={p.x}
-          cy={p.y}
-          r={0.45}
-          className={p.slug === HOME_PIN ? 'fill-fg' : 'fill-warn'}
-        />
-      ))}
+      {model.pins.map((p) =>
+        p.slug === HOME_PIN ? (
+          <circle
+            key={`pin-${p.x}-${p.y}`}
+            cx={p.x}
+            cy={p.y}
+            r={0.65}
+            fill="var(--bg)"
+            stroke="var(--fg)"
+            strokeWidth={0.18}
+          />
+        ) : (
+          <circle key={`pin-${p.x}-${p.y}`} cx={p.x} cy={p.y} r={0.45} className="fill-fg" />
+        ),
+      )}
     </svg>
   );
 }

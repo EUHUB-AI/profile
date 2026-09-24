@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { Markdown } from '@/components/Markdown';
 import { SampleTag } from '@/components/SampleTag';
+import { Prompt } from '@/components/shell/Prompt';
 import type { Book } from '@/lib/content/collections';
 
-export function ManPage({ book, related }: { book: Book; related: Book[] }) {
-  const name = `${book.slug.toUpperCase()}(7)`;
+export function ManPage({ book, related, host }: { book: Book; related: Book[]; host: string }) {
+  const name = `${book.slug}(7)`;
   const synopsis: [string, string][] = [['status', book.status]];
   if (book.progress !== undefined && book.status !== 'finished') synopsis.push(['progress', `${book.progress}%`]);
   if (book.started) synopsis.push(['started', book.started]);
@@ -15,7 +16,7 @@ export function ManPage({ book, related }: { book: Book; related: Book[] }) {
 
   return (
     <article className="man">
-      <h1 className="sr-only">{book.title}</h1>
+      <Prompt cmd={`man ${book.slug}`} label={book.title} />
       <header aria-hidden="true" className="t-dense mb-8 flex justify-between gap-[2ch] text-dim">
         <span className="truncate">{name}</span>
         <span className="hidden sm:inline">Reading Manual</span>
@@ -68,7 +69,7 @@ export function ManPage({ book, related }: { book: Book; related: Book[] }) {
       )}
 
       <footer aria-hidden="true" className="t-dense mt-12 flex justify-between gap-[2ch] text-dim">
-        <span>mike-g</span>
+        <span>{host}</span>
         <span>{book.finished ?? book.started ?? ''}</span>
         <span className="hidden truncate sm:inline">{name}</span>
       </footer>

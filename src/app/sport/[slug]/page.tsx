@@ -93,7 +93,7 @@ export default async function SportDetailPage({ params }: Params) {
               >
                 <span className="text-dim">{e.date}</span>
                 <span>{e.name}</span>
-                <span className={`col-start-2 sm:col-start-auto ${e.result ? '' : 'text-warn'}`}>
+                <span className={`col-start-2 sm:col-start-auto ${e.result ? '' : 'text-dim'}`}>
                   {e.result ?? 'scheduled'}
                 </span>
               </li>
