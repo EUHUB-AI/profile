@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Terminal } from "lucide-react";
+import { Terminal } from "lucide-react";
 import { useState } from "react";
 
 interface Job {

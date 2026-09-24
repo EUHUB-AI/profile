@@ -5,7 +5,6 @@ import CareerAccordion from "@/components/CareerAccordion";
 import ComplianceBadge from "@/components/ComplianceBadge";
 import HiddenSEO from "@/components/HiddenSEO";
 import AgentContact from "@/components/AgentContact";
-import AIOperationsBanner from "@/components/AIOperationsBanner";
 
 export default function Home() {
   return (
@@ -66,7 +65,6 @@ export default function Home() {
           {/* Right Column: Career History */}
           <div className="lg:col-span-2">
             <CareerAccordion />
-            {/* <AIOperationsBanner /> */}
           </div>
         </div>
 
