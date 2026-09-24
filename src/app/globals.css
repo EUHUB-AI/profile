@@ -38,6 +38,24 @@ html {
   background: var(--bg);
 }
 
+@media (min-width: 1920px) {
+  html {
+    font-size: 114.29%;
+  }
+}
+
+@media (min-width: 2560px) {
+  html {
+    font-size: 128.57%;
+  }
+}
+
+@media (min-width: 3840px) {
+  html {
+    font-size: 157.14%;
+  }
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -205,6 +223,17 @@ kbd {
 
   .shell-status {
     order: 4;
+  }
+}
+
+@media (min-width: 1536px) {
+  .frame {
+    max-width: min(94vw, 200ch);
+  }
+
+  .shell-main {
+    padding-left: 6ch;
+    padding-right: 6ch;
   }
 }
 

@@ -22,7 +22,7 @@ export default function SportPage() {
           <p className="mb-8 text-dim">
             up {streak} days, {active.length} of {sports.length} sports active
           </p>
-          <ul className="grid list-none gap-8 p-0 sm:grid-cols-2">
+          <ul className="grid list-none gap-8 p-0 sm:grid-cols-2 2xl:grid-cols-3">
             {sports.map((s) => (
               <li key={s.slug}>
                 <SportPanel sport={s} />

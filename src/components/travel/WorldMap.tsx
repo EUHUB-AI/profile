@@ -8,7 +8,7 @@ export function WorldMap({ places, home }: { places: (Coord & { slug: string })[
       viewBox={`0 0 ${model.width} ${model.height}`}
       role="img"
       aria-label={`World map with ${model.pins.length - 1} visited places marked`}
-      className="mb-10 h-auto w-full"
+      className="h-auto w-full"
     >
       {model.dots.map((d) => (
         <circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={0.22} className="fill-dim opacity-50" />
