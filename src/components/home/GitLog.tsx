@@ -25,7 +25,7 @@ export function GitLog({ jobs }: { jobs: Job[] }) {
                   <span className="text-warn">{shortHash(row.entry.slug)}</span>
                   {row.entry.slug === headSlug && <span className="text-dim"> (HEAD -&gt; main)</span>}{' '}
                   {row.entry.role} @ {row.entry.company}
-                  <span className="text-dim">
+                  <span className="text-dim whitespace-nowrap">
                     {' '}
                     {row.entry.start}..{row.entry.end ?? 'now'}
                   </span>
