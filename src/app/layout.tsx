@@ -1,28 +1,35 @@
-import type { Metadata } from "next";
-import { Source_Code_Pro } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Martian_Mono } from 'next/font/google';
+import { TuiFrame } from '@/components/shell/TuiFrame';
+import { getProfile } from '@/lib/content/collections';
+import { bootScript } from '@/lib/theme';
+import './globals.css';
 
-const sourceCodePro = Source_Code_Pro({
-  variable: "--font-source-code-pro",
-  subsets: ["latin"],
+const martian = Martian_Mono({
+  subsets: ['latin', 'latin-ext'],
+  axes: ['wdth'],
+  variable: '--font-martian',
+  display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: "Mike G. | (SRE & Dev/AI/Sec Ops) Architect",
-  description: "SRE & (Dev/AI/Sec Ops) Portfolio - Architectural Maturity & Operational Excellence",
-};
+export function generateMetadata(): Metadata {
+  const profile = getProfile();
+  return {
+    ...(profile.siteUrl ? { metadataBase: new URL(profile.siteUrl) } : {}),
+    title: { default: `${profile.name} | ${profile.role}`, template: `%s | ${profile.name}` },
+    description: `${profile.name}, ${profile.role}. Career, plus the books, travel, languages, sport and hobbies in between.`,
+  };
+}
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const profile = getProfile();
   return (
-    <html lang="en">
-      <body
-        className={`${sourceCodePro.variable} antialiased`}
-      >
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      </head>
+      <body className={martian.variable}>
+        <TuiFrame profile={profile}>{children}</TuiFrame>
       </body>
     </html>
   );

@@ -1,41 +1,213 @@
 @import "tailwindcss";
 
 :root {
-  /* Default: Dark Theme */
-  --background: #1e1e1e;
-  --foreground: #00FF00;
-  --accent: #00FFFF;
+  --bg: #0c1410;
+  --fg: #8af5a0;
+  --dim: #56966a;
+  --warn: #ffb547;
+  --alert: #ff6b57;
+  --band: #101c16;
+  --rule: #2a4535;
+  color-scheme: dark;
 }
 
 [data-theme="light"] {
-  /* Light Theme */
-  --background: #F5F5F5;
-  --foreground: #101820;
-  --accent: #FF8C00;
+  --bg: #f4f7f0;
+  --fg: #1f2b24;
+  --dim: #56645a;
+  --warn: #8f5400;
+  --alert: #b3321b;
+  --band: #dcebd9;
+  --rule: #b9cbb8;
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
-  --font-mono: var(--font-source-code-pro);
-  --font-sans: var(--font-source-code-pro);
-  /* Use mono for everything as per spec */
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-dim: var(--dim);
+  --color-warn: var(--warn);
+  --color-alert: var(--alert);
+  --color-band: var(--band);
+  --color-rule: var(--rule);
+  --font-mono: var(--font-martian), ui-monospace, monospace;
+  --font-sans: var(--font-martian), ui-monospace, monospace;
+  /* legacy aliases for the old home page components; removed in Task 10 */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-accent: var(--warn);
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-variation-settings: "wdth" 100;
+  -webkit-font-smoothing: antialiased;
+}
 
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--warn);
+  outline-offset: 2px;
+}
+
+kbd {
+  font: inherit;
+  color: var(--fg);
+}
+
+.t-display {
+  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  line-height: 1.15;
+  font-weight: 700;
+  font-variation-settings: "wdth" 112.5, "wght" 700;
+  overflow-wrap: anywhere;
+}
+
+:root:not([data-theme="light"]) .t-display {
+  text-shadow: 0 0 12px color-mix(in srgb, var(--fg) 35%, transparent);
+}
+
+.t-title {
+  font-size: 1.3125rem;
+  line-height: 1.3;
+  font-weight: 600;
+  font-variation-settings: "wdth" 100, "wght" 600;
+}
+
+.t-dense {
+  font-size: 0.875rem;
+  font-variation-settings: "wdth" 87.5;
+}
+
+.t-micro {
+  font-size: 0.75rem;
+}
+
+.link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  color: var(--warn);
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 110ch;
+  margin: 0 auto;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 50;
+  padding: 0.25rem 1ch;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.shell-title {
+  order: 1;
+  padding: 0.5rem 2ch;
+  border-bottom: 1px solid var(--rule);
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shell-main {
+  order: 2;
+  flex: 1;
+  padding: 1.5rem 2ch 3rem;
+}
+
+.shell-status {
+  order: 3;
+  display: flex;
+  gap: 2ch;
+  padding: 0.375rem 2ch;
+  border-top: 1px solid var(--rule);
+}
+
+.shell-tabs {
+  order: 4;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-top: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.shell-tabs ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tab {
+  display: block;
+  padding: 0.5rem 1.5ch;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.tab:hover {
+  background: var(--band);
+}
+
+.tab[aria-current="page"] {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.tab[aria-current="page"] .tab-key {
+  color: var(--bg);
+}
+
+@media (min-width: 640px) {
+  .frame {
+    min-height: calc(100dvh - 3rem);
+    margin: 1.5rem auto;
+    border: 1px solid var(--rule);
   }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
+  .shell-tabs {
+    order: 2;
+    position: static;
+    border-top: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .shell-main {
+    order: 3;
+    padding: 2rem 4ch 3rem;
+  }
+
+  .shell-status {
+    order: 4;
+  }
 }
