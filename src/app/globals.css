@@ -231,3 +231,153 @@ kbd {
 .hint:hover {
   color: var(--warn);
 }
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > li:nth-child(even) {
+  background: var(--band);
+}
+
+.row {
+  display: grid;
+  align-items: baseline;
+  padding: 0.375rem 1ch;
+  text-decoration: none;
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.row:focus-visible {
+  outline: none;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.row:focus-visible :is(.text-dim, .text-warn, .text-alert, .text-fg) {
+  color: var(--bg);
+}
+
+.row:focus-visible .meter {
+  --meter-on: var(--bg);
+  --meter-off: color-mix(in srgb, var(--bg) 35%, transparent);
+}
+
+.row:focus-visible .sample-tag {
+  color: var(--bg);
+}
+
+.meter {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 0.55ch;
+  gap: 1px;
+  height: 0.8em;
+  vertical-align: -0.05em;
+  --meter-on: currentColor;
+  --meter-off: color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.meter > span {
+  background: var(--meter-off);
+}
+
+.meter > span[data-on] {
+  background: var(--meter-on);
+}
+
+.sample-tag {
+  margin-left: 1ch;
+  padding: 0 0.5ch;
+  border: 1px solid currentColor;
+  color: var(--warn);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  vertical-align: 0.1em;
+}
+
+.prose-tui {
+  max-width: 68ch;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.prose-tui > * + * {
+  margin-top: 1em;
+}
+
+.prose-tui h3 {
+  margin-top: 1.75em;
+  font-weight: 700;
+  font-variation-settings: "wdth" 100, "wght" 700;
+}
+
+.prose-tui a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-tui a:hover {
+  color: var(--warn);
+}
+
+.prose-tui ul {
+  padding-left: 2ch;
+  list-style: none;
+}
+
+.prose-tui ul > li::before {
+  content: "-";
+  display: inline-block;
+  width: 2ch;
+  margin-left: -2ch;
+  color: var(--dim);
+}
+
+.prose-tui li + li {
+  margin-top: 0.25em;
+}
+
+.prose-tui ol {
+  padding-left: 3ch;
+  list-style: decimal;
+}
+
+.prose-tui code {
+  padding: 0 0.3ch;
+  background: var(--band);
+}
+
+.prose-tui blockquote {
+  padding-left: 2ch;
+  border-left: 2px solid var(--rule);
+  color: var(--dim);
+}
+
+.man {
+  max-width: 80ch;
+}
+
+.man section + section {
+  margin-top: 1.5rem;
+}
+
+.man-h {
+  font-weight: 700;
+  font-variation-settings: "wdth" 100, "wght" 700;
+}
+
+.man-indent {
+  padding-left: 3ch;
+}
+
+@media (min-width: 640px) {
+  .man-indent {
+    padding-left: 7ch;
+  }
+}
