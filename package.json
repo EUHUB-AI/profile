@@ -12,11 +12,9 @@
   "dependencies": {
     "dotted-map": "^3.1.0",
     "gray-matter": "^4.0.3",
-    "lucide-react": "^0.555.0",
     "next": "16.0.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-icons": "^5.5.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "zod": "^4.6.5"

@@ -32,10 +32,6 @@
   --color-rule: var(--rule);
   --font-mono: var(--font-martian), ui-monospace, monospace;
   --font-sans: var(--font-martian), ui-monospace, monospace;
-  /* legacy aliases for the old home page components; removed in Task 10 */
-  --color-background: var(--bg);
-  --color-foreground: var(--fg);
-  --color-accent: var(--warn);
 }
 
 html {
@@ -474,4 +470,88 @@ kbd {
 
 .row:focus-visible .spark {
   color: var(--bg);
+}
+
+.motd {
+  margin: 0 0 3rem;
+  font: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.motd a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.motd a:hover {
+  color: var(--warn);
+}
+
+@keyframes motd-line {
+  from {
+    visibility: hidden;
+  }
+  to {
+    visibility: visible;
+  }
+}
+
+html[data-motd-play] .motd-line {
+  animation: motd-line 1ms steps(1, end) both;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motd-play] .motd-line {
+    animation: none;
+  }
+}
+
+.gitlog {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gitlog-edge,
+.gitlog-graph {
+  white-space: pre;
+}
+
+.gitlog-edge {
+  color: var(--dim);
+}
+
+.gitlog-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1ch;
+  padding: 0.125rem 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.gitlog-summary::-webkit-details-marker {
+  display: none;
+}
+
+.gitlog-summary:hover {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.gitlog-toggle::after {
+  content: "[+]";
+  margin-left: 1ch;
+  color: var(--dim);
+}
+
+details[open] > .gitlog-summary .gitlog-toggle::after {
+  content: "[-]";
+}
+
+.gitlog-body {
+  margin: 0.5rem 0 1rem 0.5ch;
+  padding-left: 2ch;
+  border-left: 1px solid var(--dim);
 }
