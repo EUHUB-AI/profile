@@ -18,6 +18,27 @@ describe('date fields', () => {
     expect(result.success).toBe(false);
     expect(result.error?.issues[0].message).toMatch(/YYYY-MM/);
   });
+
+  it('normalizes a quoted YYYY-MM-DD string down to YYYY-MM for yearMonth', () => {
+    expect(yearMonth.parse('2025-04-12')).toBe('2025-04');
+  });
+
+  it('accepts YYYY, YYYY-MM and YYYY-MM-DD for day, keeping the given precision', () => {
+    expect(day.parse('2019')).toBe('2019');
+    expect(day.parse('2025-04')).toBe('2025-04');
+    expect(day.parse('2025-04-12')).toBe('2025-04-12');
+  });
+
+  it('normalizes Date objects and numbers for day', () => {
+    expect(day.parse(new Date('2027-04-18T00:00:00Z'))).toBe('2027-04-18');
+    expect(day.parse(2019)).toBe('2019');
+  });
+
+  it('rejects invalid day formats with a hint listing all accepted precisions', () => {
+    const result = day.safeParse('April 2025');
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe('use YYYY-MM-DD (or YYYY-MM, YYYY)');
+  });
 });
 
 describe('bookSchema', () => {

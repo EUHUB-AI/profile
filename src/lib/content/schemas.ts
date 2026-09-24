@@ -2,16 +2,22 @@ import { z } from 'zod';
 
 const YEAR_MONTH = /^\d{4}(-(0[1-9]|1[0-2]))?$/;
 const DAY = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const DAY_OR_LOOSER = /^\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?)?$/;
 
 // YAML turns `2025-04-12` into a Date and `2019` into a number; normalize both to strings.
 export const yearMonth = z.preprocess(
-  (v) => (v instanceof Date ? v.toISOString().slice(0, 7) : typeof v === 'number' ? String(v) : v),
+  (v) => {
+    if (v instanceof Date) return v.toISOString().slice(0, 7);
+    if (typeof v === 'number') return String(v);
+    if (typeof v === 'string' && DAY.test(v)) return v.slice(0, 7);
+    return v;
+  },
   z.string().regex(YEAR_MONTH, 'use YYYY-MM (or YYYY)'),
 );
 
 export const day = z.preprocess(
-  (v) => (v instanceof Date ? v.toISOString().slice(0, 10) : v),
-  z.string().regex(DAY, 'use YYYY-MM-DD'),
+  (v) => (v instanceof Date ? v.toISOString().slice(0, 10) : typeof v === 'number' ? String(v) : v),
+  z.string().regex(DAY_OR_LOOSER, 'use YYYY-MM-DD (or YYYY-MM, YYYY)'),
 );
 
 const sample = z.boolean().default(false);
