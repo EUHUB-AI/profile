@@ -24,11 +24,11 @@ export function generateMetadata(): Metadata {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const profile = getProfile();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={martian.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body className={martian.variable}>
+      <body>
         <TuiFrame profile={profile}>{children}</TuiFrame>
       </body>
     </html>
