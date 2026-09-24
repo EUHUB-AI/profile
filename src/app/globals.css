@@ -1,41 +1,586 @@
 @import "tailwindcss";
 
 :root {
-  /* Default: Dark Theme */
-  --background: #1e1e1e;
-  --foreground: #00FF00;
-  --accent: #00FFFF;
+  --bg: #0c1410;
+  --fg: #8af5a0;
+  --dim: #56966a;
+  --warn: #ffb547;
+  --alert: #ff6b57;
+  --band: #101c16;
+  --rule: #2a4535;
+  color-scheme: dark;
 }
 
 [data-theme="light"] {
-  /* Light Theme */
-  --background: #F5F5F5;
-  --foreground: #101820;
-  --accent: #FF8C00;
+  --bg: #f4f7f0;
+  --fg: #1f2b24;
+  --dim: #56645a;
+  --warn: #8f5400;
+  --alert: #b3321b;
+  --band: #dcebd9;
+  --rule: #b9cbb8;
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
-  --font-mono: var(--font-source-code-pro);
-  --font-sans: var(--font-source-code-pro);
-  /* Use mono for everything as per spec */
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-dim: var(--dim);
+  --color-warn: var(--warn);
+  --color-alert: var(--alert);
+  --color-band: var(--band);
+  --color-rule: var(--rule);
+  --font-mono: var(--font-martian), ui-monospace, monospace;
+  --font-sans: var(--font-martian), ui-monospace, monospace;
+}
+
+html {
+  background: var(--bg);
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 114.29%;
+  }
+}
+
+@media (min-width: 2560px) {
+  html {
+    font-size: 128.57%;
+  }
+}
+
+@media (min-width: 3840px) {
+  html {
+    font-size: 157.14%;
+  }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-variation-settings: "wdth" 100;
+  -webkit-font-smoothing: antialiased;
+}
 
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--warn);
+  outline-offset: 2px;
+}
+
+kbd {
+  font: inherit;
+  color: var(--fg);
+}
+
+.t-display {
+  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  line-height: 1.15;
+  font-weight: 700;
+  font-variation-settings: "wdth" 112.5, "wght" 700;
+  overflow-wrap: anywhere;
+}
+
+:root:not([data-theme="light"]) .t-display {
+  text-shadow: 0 0 12px color-mix(in srgb, var(--fg) 35%, transparent);
+}
+
+.t-title {
+  font-size: 1.3125rem;
+  line-height: 1.3;
+  font-weight: 600;
+  font-variation-settings: "wdth" 100, "wght" 600;
+}
+
+.t-dense {
+  font-size: 0.875rem;
+  font-variation-settings: "wdth" 87.5;
+}
+
+.t-micro {
+  font-size: 0.75rem;
+}
+
+.link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  color: var(--warn);
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 110ch;
+  margin: 0 auto;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 50;
+  padding: 0.25rem 1ch;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.shell-title {
+  order: 1;
+  padding: 0.5rem 2ch;
+  border-bottom: 1px solid var(--rule);
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shell-main {
+  order: 2;
+  flex: 1;
+  padding: 1.5rem 2ch 3rem;
+}
+
+.shell-status {
+  order: 3;
+  display: flex;
+  gap: 2ch;
+  padding: 0.375rem 2ch;
+  border-top: 1px solid var(--rule);
+}
+
+.shell-tabs {
+  order: 4;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-top: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.shell-tabs ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tab {
+  display: block;
+  padding: 0.5rem 1.5ch;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.tab:hover {
+  background: var(--band);
+}
+
+.tab[aria-current="page"] {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.tab[aria-current="page"] .tab-key {
+  color: var(--bg);
+}
+
+@media (min-width: 640px) {
+  .frame {
+    min-height: calc(100dvh - 3rem);
+    margin: 1.5rem auto;
+    border: 1px solid var(--rule);
   }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
+  .shell-tabs {
+    order: 2;
+    position: static;
+    border-top: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .shell-main {
+    order: 3;
+    padding: 2rem 4ch 3rem;
+  }
+
+  .shell-status {
+    order: 4;
+  }
+}
+
+@media (min-width: 1536px) {
+  .frame {
+    max-width: min(94vw, 200ch);
+  }
+
+  .shell-main {
+    padding-left: 6ch;
+    padding-right: 6ch;
+  }
+}
+
+.help {
+  max-width: min(48ch, calc(100vw - 2rem));
+  padding: 1.5rem 3ch;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.help::backdrop {
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
+}
+
+.hint {
+  cursor: pointer;
+}
+
+.hint:hover {
+  color: var(--warn);
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > li:nth-child(even) {
+  background: var(--band);
+}
+
+.row {
+  display: grid;
+  align-items: baseline;
+  padding: 0.375rem 1ch;
+  text-decoration: none;
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.row:focus-visible {
+  outline: none;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.row:focus-visible :is(.text-dim, .text-warn, .text-alert, .text-fg) {
+  color: var(--bg);
+}
+
+.row:focus-visible .meter {
+  --meter-on: var(--bg);
+  --meter-off: color-mix(in srgb, var(--bg) 35%, transparent);
+}
+
+.row:focus-visible .sample-tag {
+  color: var(--bg);
+}
+
+.meter {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 0.55ch;
+  gap: 1px;
+  height: 0.8em;
+  vertical-align: -0.05em;
+  --meter-on: currentColor;
+  --meter-off: color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.meter > span {
+  background: var(--meter-off);
+}
+
+.meter > span[data-on] {
+  background: var(--meter-on);
+}
+
+.sample-tag {
+  margin-left: 1ch;
+  padding: 0 0.5ch;
+  border: 1px solid currentColor;
+  color: var(--warn);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  vertical-align: 0.1em;
+}
+
+.prose-tui {
+  max-width: 68ch;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.prose-tui > * + * {
+  margin-top: 1em;
+}
+
+.prose-tui h3 {
+  margin-top: 1.75em;
+  font-weight: 700;
+  font-variation-settings: "wdth" 100, "wght" 700;
+}
+
+.prose-tui a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-tui a:hover {
+  color: var(--warn);
+}
+
+.prose-tui ul {
+  padding-left: 2ch;
+  list-style: none;
+}
+
+.prose-tui ul > li::before {
+  content: "-";
+  display: inline-block;
+  width: 2ch;
+  margin-left: -2ch;
+  color: var(--dim);
+}
+
+.prose-tui li + li {
+  margin-top: 0.25em;
+}
+
+.prose-tui ol {
+  padding-left: 3ch;
+  list-style: decimal;
+}
+
+.prose-tui code {
+  padding: 0 0.3ch;
+  background: var(--band);
+}
+
+.prose-tui blockquote {
+  padding-left: 2ch;
+  border-left: 2px solid var(--rule);
+  color: var(--dim);
+}
+
+.man {
+  max-width: 80ch;
+}
+
+.man section + section {
+  margin-top: 1.5rem;
+}
+
+.man-h {
+  font-weight: 700;
+  font-variation-settings: "wdth" 100, "wght" 700;
+}
+
+.man-indent {
+  padding-left: 3ch;
+}
+
+@media (min-width: 640px) {
+  .man-indent {
+    padding-left: 7ch;
+  }
+}
+
+.dot {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  vertical-align: -0.05em;
+}
+
+.dot[data-state="done"] {
+  border-color: var(--fg);
+  background: var(--fg);
+}
+
+.dot[data-state="running"] {
+  border-color: var(--warn);
+  background: linear-gradient(90deg, var(--warn) 50%, transparent 50%);
+}
+
+.dot[data-state="pending"] {
+  border-color: var(--dim);
+}
+
+.dot[data-state="off"] {
+  border-color: var(--dim);
+  opacity: 0.45;
+}
+
+.row:focus-visible .dot {
+  border-color: var(--bg);
+}
+
+.row:focus-visible .dot[data-state="done"] {
+  background: var(--bg);
+}
+
+.row:focus-visible .dot[data-state="running"] {
+  background: linear-gradient(90deg, var(--bg) 50%, transparent 50%);
+}
+
+.stages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 0.25rem;
+}
+
+.stage {
+  white-space: nowrap;
+}
+
+.stage + .stage::before {
+  content: "";
+  display: inline-block;
+  width: 1.5ch;
+  margin: 0 0.75ch;
+  border-top: 1px solid var(--rule);
+  vertical-align: middle;
+}
+
+.panel {
+  position: relative;
+  display: block;
+  margin-top: 0.75rem;
+  padding: 1.25rem 2ch 1rem;
+  border: 1px solid var(--rule);
+}
+
+.panel-title {
+  position: absolute;
+  top: -0.8em;
+  left: 1.5ch;
+  padding: 0 1ch;
+  background: var(--bg);
+}
+
+.row:focus-visible .panel-title {
+  background: var(--fg);
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 2rem;
+}
+
+.spark-lg .spark {
+  height: 5rem;
+}
+
+.row:focus-visible .spark {
+  color: var(--bg);
+}
+
+.motd {
+  margin: 0 0 3rem;
+  font: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.motd a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.motd a:hover {
+  color: var(--warn);
+}
+
+@keyframes motd-line {
+  from {
+    visibility: hidden;
+  }
+  to {
+    visibility: visible;
+  }
+}
+
+html[data-motd-play] .motd-line {
+  animation: motd-line 1ms steps(1, end) both;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motd-play] .motd-line {
+    animation: none;
+  }
+}
+
+.gitlog {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gitlog-edge,
+.gitlog-graph {
+  white-space: pre;
+}
+
+.gitlog-edge {
+  color: var(--dim);
+}
+
+.gitlog-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1ch;
+  padding: 0.125rem 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.gitlog-summary::-webkit-details-marker {
+  display: none;
+}
+
+.gitlog-summary:hover {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.gitlog-toggle::after {
+  content: "[+]";
+  margin-left: 1ch;
+  color: var(--dim);
+}
+
+details[open] > .gitlog-summary .gitlog-toggle::after {
+  content: "[-]";
+}
+
+.gitlog-body {
+  margin: 0.5rem 0 1rem 0.5ch;
+  padding-left: 2ch;
+  border-left: 1px solid var(--dim);
 }
