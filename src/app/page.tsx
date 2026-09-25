@@ -11,6 +11,7 @@ import {
   getSports,
   getTrips,
 } from '@/lib/content/collections';
+import { siteIsIndexable } from '@/lib/site';
 import { summarize } from '@/lib/tui/motd';
 import { now } from '@/lib/tui/time';
 
@@ -36,10 +37,12 @@ export default function Home() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-      />
+      {siteIsIndexable() && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+        />
+      )}
       <Prompt cmd={`ssh ${profile.handle}@${profile.host}`} label={`${profile.name}, ${profile.role}`} />
 
       <div className="2xl:grid 2xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] 2xl:items-start 2xl:gap-x-[6ch]">

@@ -91,6 +91,18 @@ npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
   - the first manual run
   - DNS for `mike.euhub.co` (a CNAME plus an `asuid.mike` TXT record) and `az containerapp hostname add/bind`
 - **GCP is gone:** the old Cloud Run pipeline and `cloudbuild.yaml` were removed on 2026-09-24. Don't reintroduce them.
+- **Hidden from crawlers by default (since 2026-09-25).** Unless the build sets `SITE_INDEXABLE=true`:
+  - robots.txt disallows `*` and named AI agents (the list is in `src/lib/site.ts`).
+  - The sitemap is empty.
+  - Every response carries `X-Robots-Tag: noindex, nofollow, noai…`, and pages carry robots meta tags.
+  - The home page leaves out its JSON-LD structured data.
+
+  The setting is read at build time. For Docker, use `--build-arg SITE_INDEXABLE=true`. The Azure workflow doesn't pass it yet, so an Azure deploy stays hidden until `build-args: SITE_INDEXABLE=true` is added to its build-push step.
+- **Temporary sharing (2026-09-25):**
+  - The production build runs on this machine: `node .next/standalone/server.js` on 127.0.0.1:3100, with `public`, `.next/static` and `content` copied next to it.
+  - It's exposed through a Cloudflare quick tunnel: `cloudflared tunnel --url http://127.0.0.1:3100`, which gives a random `*.trycloudflare.com` URL.
+  - The URL changes every time the tunnel restarts, and everything stops when the machine sleeps or reboots.
+  - PIDs are in `/tmp/profile-share.pid` and `/tmp/profile-tunnel.pid`; logs are in `/tmp/profile-share.log` and `/tmp/profile-tunnel.log`.
 
 ## How Mike works
 
