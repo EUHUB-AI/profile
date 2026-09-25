@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Martian_Mono } from 'next/font/google';
 import { TuiFrame } from '@/components/shell/TuiFrame';
 import { getProfile } from '@/lib/content/collections';
+import { siteIsIndexable } from '@/lib/site';
 import { bootScript } from '@/lib/theme';
 import './globals.css';
 
@@ -18,6 +19,9 @@ export function generateMetadata(): Metadata {
     ...(profile.siteUrl ? { metadataBase: new URL(profile.siteUrl) } : {}),
     title: { default: `${profile.name} | ${profile.role}`, template: `%s | ${profile.name}` },
     description: `${profile.name}, ${profile.role}. Career, plus the books, travel, languages, sport and hobbies in between.`,
+    ...(siteIsIndexable()
+      ? {}
+      : { robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false, noimageindex: true } } }),
   };
 }
 

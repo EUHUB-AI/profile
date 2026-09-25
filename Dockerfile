@@ -11,6 +11,10 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Hidden from search engines and AI crawlers unless built with --build-arg SITE_INDEXABLE=true.
+ARG SITE_INDEXABLE=false
+ENV SITE_INDEXABLE=$SITE_INDEXABLE
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
