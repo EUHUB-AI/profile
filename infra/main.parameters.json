@@ -2,14 +2,10 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "platformResourceGroup": {
-      "value": "rg-euhub-prod-platform"
-    },
-    "containerAppsEnvironmentName": {
-      "value": "cae-euhub-prod"
-    },
-    "acrName": {
-      "value": "acreuhubprod"
-    }
+    "containerAppName": { "value": "mike-profile-web" },
+    "containerAppsEnvironmentName": { "value": "personal-brand-analytics-env" },
+    "pullIdentityName": { "value": "mike-profile-web-identity" },
+    "customDomainName": { "value": "" },
+    "customDomainCertificateName": { "value": "" }
   }
 }

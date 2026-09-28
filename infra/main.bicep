@@ -1,39 +1,37 @@
-// Provisions the mike-g profile Container App into the existing shared
-// Container Apps Environment + Azure Container Registry (the same platform
-// resources the sibling ca-euhub-*-web apps use). Both live in
-// rg-euhub-prod-platform; the app itself goes into rg-euhub-prod-apps.
-// Deploy with resource-group scope:
+// The mike-g profile Container App, joining the Container Apps environment and registry
+// that already live in resource group mike-gordievsky (shared with the personal-brand apps).
+// The pull identity and its AcrPull grant are created once by hand (see infra/README.md),
+// so the very first revision can pull its image. Deploy with:
 //
-//   az deployment group create \
-//     --resource-group rg-euhub-prod-apps \
-//     --template-file infra/main.bicep \
-//     --parameters infra/main.parameters.json \
+//   az deployment group create -g mike-gordievsky \
+//     --template-file infra/main.bicep --parameters infra/main.parameters.json \
 //     --parameters imageTag=<git-sha>
-//
-// Re-running is safe: it's declarative and only changes what drifted.
 
-@description('Azure region. Matches the shared Container Apps Environment.')
-param location string = 'germanywestcentral'
+@description('Region of the existing Container Apps environment.')
+param location string = 'westeurope'
 
-@description('Name of the Container App to create/update.')
-param containerAppName string = 'ca-euhub-mike-web'
+param containerAppName string = 'mike-profile-web'
 
-@description('Resource group holding the shared Container Apps Environment and ACR.')
-param platformResourceGroup string = 'rg-euhub-prod-platform'
+@description('Existing Container Apps environment in this resource group.')
+param containerAppsEnvironmentName string = 'personal-brand-analytics-env'
 
-@description('Name of the existing Container Apps Environment to join.')
-param containerAppsEnvironmentName string = 'cae-euhub-prod'
+@description('Existing registry in this resource group.')
+param acrName string = 'mikegordievskypersonalbrand'
 
-@description('Name of the existing Azure Container Registry images are pushed to.')
-param acrName string = 'acreuhubprod'
+@description('Existing user-assigned identity that holds AcrPull on the registry.')
+param pullIdentityName string = 'mike-profile-web-identity'
 
-@description('Repository name within the registry.')
 param imageRepository string = 'mike-profile-web'
 
 @description('Image tag to deploy; the workflow passes the short git SHA.')
 param imageTag string
 
-@description('Always-on replica floor. 1 avoids cold starts; 0 scales to zero to save cost at the price of a slow first hit after idle.')
+@description('Custom hostname already bound to this app, e.g. mike.euhub.co. Empty until bound.')
+param customDomainName string = ''
+
+@description('Name of the environment managed certificate for customDomainName. Empty until bound.')
+param customDomainCertificateName string = ''
+
 @minValue(0)
 @maxValue(5)
 param minReplicas int = 1
@@ -42,35 +40,43 @@ param minReplicas int = 1
 @maxValue(10)
 param maxReplicas int = 3
 
-@description('vCPU for the Next.js standalone server.')
 param cpu string = '0.25'
-
-@description('Memory for the Next.js standalone server.')
 param memory string = '0.5Gi'
 
 param tags object = {
-  environment: 'prod'
+  app: 'mike-profile'
   managed_by: 'github-actions'
 }
 
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
   name: containerAppsEnvironmentName
-  scope: resourceGroup(platformResourceGroup)
 }
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   name: acrName
-  scope: resourceGroup(platformResourceGroup)
 }
+
+resource pullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: pullIdentityName
+}
+
+var customDomains = empty(customDomainName) ? [] : [
+  {
+    name: customDomainName
+    certificateId: '${containerAppsEnvironment.id}/managedCertificates/${customDomainCertificateName}'
+    bindingType: 'SniEnabled'
+  }
+]
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   location: location
   tags: tags
   identity: {
-    // System-assigned identity + AcrPull (granted in deploy.yml) instead of
-    // registry admin credentials stored as a Container App secret.
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${pullIdentity.id}': {}
+    }
   }
   properties: {
     managedEnvironmentId: containerAppsEnvironment.id
@@ -80,6 +86,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         external: true
         targetPort: 3000
         allowInsecure: false
+        customDomains: customDomains
         traffic: [
           {
             latestRevision: true
@@ -90,7 +97,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [
         {
           server: acr.properties.loginServer
-          identity: 'system'
+          identity: pullIdentity.id
         }
       ]
     }
@@ -131,14 +138,13 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-@description('The default public hostname Azure assigns this Container App.')
+@description('Azure-generated hostname, e.g. mike-profile-web.jollymeadow-f8c88678.westeurope.azurecontainerapps.io.')
 output fqdn string = containerApp.properties.configuration.ingress.fqdn
 
-@description('Fully-qualified image reference that was deployed.')
+@description('Public URL: the custom domain once bound, otherwise the Azure-generated one.')
+output url string = empty(customDomainName) ? 'https://${containerApp.properties.configuration.ingress.fqdn}' : 'https://${customDomainName}'
+
 output deployedImage string = '${acr.properties.loginServer}/${imageRepository}:${imageTag}'
 
-@description('The Container App\'s system-assigned identity principal ID; deploy.yml grants it AcrPull.')
-output containerAppPrincipalId string = containerApp.identity.principalId
-
-@description('Resource ID of the ACR, for the AcrPull grant step in deploy.yml.')
-output acrId string = acr.id
+@description('Value for the asuid TXT record when binding a custom domain.')
+output customDomainVerificationId string = containerApp.properties.customDomainVerificationId
