@@ -1,6 +1,6 @@
 # Project context: mike-g profile
 
-Read this first when picking the project back up. It records what the site is, how it's built and deployed, what was done and why, and what's still open. Last updated 2026-09-24.
+Read this first when picking the project back up. It records what the site is, how it's built and deployed, what was done and why, and what's still open. Last updated 2026-09-29.
 
 ## What it is
 
@@ -77,32 +77,16 @@ npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
 
 ## Deployment
 
-- **Target:** Azure Container Apps, the same setup as `EUHUB-AI/OminusMTE`.
-  - App `ca-euhub-mike-web` in `rg-euhub-prod-apps`.
-  - Shared environment `cae-euhub-prod` and registry `acreuhubprod`, both in `rg-euhub-prod-platform`.
-  - Region `germanywestcentral`, subscription `EUHub`.
-- **Trigger:** manual only (`workflow_dispatch`). A push to `main` deploys nothing.
-- **Pipeline:** lint, types and tests → build and push to ACR (OIDC login, no stored secrets) → apply `infra/main.bicep` → grant AcrPull.
-- **Output:** the run summary and the GitHub `production` environment show the app's Azure-generated URL (`*.azurecontainerapps.io`).
-- **Not done yet** (steps in `infra/README.md`):
-  - the Azure app registration and its OIDC credential (subject `repo:EUHUB-AI@248672290/profile@1105616066:environment:production`)
-  - role assignments
-  - the GitHub `production` environment and its variables
-  - the first manual run
-  - DNS for `mike.euhub.co` (a CNAME plus an `asuid.mike` TXT record) and `az containerapp hostname add/bind`
-- **GCP is gone:** the old Cloud Run pipeline and `cloudbuild.yaml` were removed on 2026-09-24. Don't reintroduce them.
-- **Hidden from crawlers by default (since 2026-09-25).** Unless the build sets `SITE_INDEXABLE=true`:
-  - robots.txt disallows `*` and named AI agents (the list is in `src/lib/site.ts`).
-  - The sitemap is empty.
-  - Every response carries `X-Robots-Tag: noindex, nofollow, noai…`, and pages carry robots meta tags.
-  - The home page leaves out its JSON-LD structured data.
-
-  The setting is read at build time. For Docker, use `--build-arg SITE_INDEXABLE=true`. The Azure workflow doesn't pass it yet, so an Azure deploy stays hidden until `build-args: SITE_INDEXABLE=true` is added to its build-push step.
-- **Temporary sharing (2026-09-25):**
-  - The production build runs on this machine: `node .next/standalone/server.js` on 127.0.0.1:3100, with `public`, `.next/static` and `content` copied next to it.
-  - It's exposed through a Cloudflare quick tunnel: `cloudflared tunnel --url http://127.0.0.1:3100`, which gives a random `*.trycloudflare.com` URL.
-  - The URL changes every time the tunnel restarts, and everything stops when the machine sleeps or reboots.
-  - PIDs are in `/tmp/profile-share.pid` and `/tmp/profile-tunnel.pid`; logs are in `/tmp/profile-share.log` and `/tmp/profile-tunnel.log`.
+- **Where:** Container App `mike-profile-web` in resource group **`mike-gordievsky`** (westeurope, subscription EUHub `42d3345a-2568-48e0-a414-3fc00ee2cba7`, tenant `8c4f47c0-d3cc-4c9c-bc45-39bbf0eb18be`). It shares that group's existing Container Apps environment `personal-brand-analytics-env` and registry `mikegordievskypersonalbrand` with the personal-brand apps (`personal-brand-analytics`, `linkedin-telegram-worker`, `linkedin-publication-collector`). **Never touch those.**
+- **URLs:** `https://mike.euhub.co` (managed certificate `mc-personal-brand-mike-euhub-co-5112`), plus the Azure URL `https://mike-profile-web.jollymeadow-f8c88678.westeurope.azurecontainerapps.io`.
+- **Deploy:** manual only. Actions → **Deploy to Azure Container Apps** → **Run workflow**, or `gh workflow run deploy.yml --ref main -f site_indexable=false`. Pushing to `main` deploys nothing.
+- **Hidden from crawlers:** the workflow input `site_indexable` (default off) sets the `SITE_INDEXABLE` build arg. Off means robots.txt disallows everyone, every response carries `X-Robots-Tag: noindex, nofollow, noai…`, pages carry robots meta tags, the sitemap is empty and the home page omits JSON-LD (list of blocked agents in `src/lib/site.ts`). Mike wants the site reachable by direct link only, so keep it off.
+- **Pipeline:** lint, types, tests, `infra/check-workflow.sh` → push to ACR → `infra/main.bicep`.
+- **Identities:** GitHub side is app registration `gh-oidc-mike-profile-deploy` (client ID `678fefdc-1e3f-444e-b489-bc2c4075b232`, federated subject `repo:EUHUB-AI/profile:environment:production`) with Contributor on the RG and AcrPush on the registry. The image pull uses user-assigned identity `mike-profile-web-identity` (AcrPull). All created by hand in the portal on 2026-09-29.
+- **Custom domain:** `mike.euhub.co` must stay recorded in `infra/main.parameters.json`, or the next deploy removes it. DNS for `euhub.co` is on Google Cloud DNS, edited by hand (CNAME `mike`, TXT `asuid.mike`).
+- **Guardrail:** `infra/check-workflow.sh` checks the workflow is manual-only and targets this RG.
+- **Local `az` on the dell machine** is a service principal with no rights on this RG; Azure commands for this app run from Mike's home machine (user login) or the portal.
+- **Superseded:** the `rg-euhub-prod-apps` / `cae-euhub-prod` target (2026-09-24) was never deployed. The Cloudflare quick tunnel from 2026-09-25 is no longer needed.
 
 ## How Mike works
 
@@ -122,12 +106,12 @@ npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
    - Priority findings fixed: sample tags missing from the home-page summary, the intro replaying after back/forward navigation, date formats, a 404 title, and four style-rule breaches.
    - The Martian Mono loading bug was found from Mike's QHD screenshot and fixed. Wide-screen scaling and two-column layouts were added.
 5. **Domain and deploy prep.** Domain set to `mike.euhub.co`. GCP removed. Azure Container Apps pipeline added (manual trigger), copied from the OminusMTE setup. PR #1 merged to `main` with a merge commit.
+6. **2026-09-29: first deploy.** Deployed to RG `mike-gordievsky` as `mike-profile-web` (run 36610613289) and bound `mike.euhub.co`. Live with sample content still tagged `sample`, hidden from crawlers. Plan: `docs/superpowers/plans/2026-09-28-azure-container-apps-deploy.md`.
 
 ## Open items / backlog
 
 - **Replace sample content.** Books, travel, languages, sport and hobbies are placeholders with `sample: true`, and they show a `sample` tag. `grep -rl "sample: true" content/` lists them. Career and profile are real data.
 - **Confirm the travel origin.** `home` is set to Bratislava, a guess from the +421 phone number.
-- **Do the Azure setup and first deploy**, then bind `mike.euhub.co` (see Deployment).
 - **Phone layout:** the intro lines wrap unevenly at 390px. Smaller intro text or no-wrap values would fix it.
 - **UHD:** the frame caps at 200 characters, about 80% of a 3840px screen. Raise the cap if Mike wants it wider.
 - **Dates frozen at build time:** "System information as of …" and the hobby "… ago" durations only update on each deploy.
