@@ -25,7 +25,7 @@ az role assignment create --assignee-object-id "$(az identity show -g mike-gordi
   --assignee-principal-type ServicePrincipal --role AcrPull --scope "$(az acr show -n mikegordievskypersonalbrand --query id -o tsv)"
 
 APP_ID=$(az ad app create --display-name gh-oidc-mike-profile-deploy --query appId -o tsv); az ad sp create --id "$APP_ID"
-az ad app federated-credential create --id "$APP_ID" --parameters '{"name":"gh-environment-production","issuer":"https://token.actions.githubusercontent.com","subject":"repo:EUHUB-AI@248672290/profile@1105616066:environment:production","audiences":["api://AzureADTokenExchange"]}'
+az ad app federated-credential create --id "$APP_ID" --parameters '{"name":"gh-environment-production","issuer":"https://token.actions.githubusercontent.com","subject":"repo:EUHUB-AI/profile:environment:production","audiences":["api://AzureADTokenExchange"]}'
 SP_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
 az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal --role Contributor --scope "$(az group show -n mike-gordievsky --query id -o tsv)"
 az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal --role AcrPush --scope "$(az acr show -n mikegordievskypersonalbrand --query id -o tsv)"

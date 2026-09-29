@@ -38,7 +38,7 @@
 - Existing, do not modify: environment `personal-brand-analytics-env`, registry `mikegordievskypersonalbrand`, apps `personal-brand-analytics`, `linkedin-telegram-worker`, `linkedin-publication-collector`, and their identities, certificates, storage and VM.
 - Names: Container App `mike-profile-web`, image repository `mike-profile-web`, pull identity `mike-profile-web-identity`, app registration `gh-oidc-mike-profile-deploy`, ARM deployment `mike-profile-<run_id>`.
 - Pipeline identity roles: exactly Contributor on RG `mike-gordievsky` and AcrPush on the registry. The pipeline performs no role assignments.
-- OIDC subject: `repo:EUHUB-AI@248672290/profile@1105616066:environment:production`.
+- OIDC subject: `repo:EUHUB-AI/profile:environment:production`.
 - GitHub environment variables: only `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
 
 **Container**
@@ -137,7 +137,7 @@ az ad app federated-credential list --id "$APP_ID" --query "[?name=='gh-environm
 az ad app federated-credential create --id "$APP_ID" --parameters '{
   "name": "gh-environment-production",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:EUHUB-AI@248672290/profile@1105616066:environment:production",
+  "subject": "repo:EUHUB-AI/profile:environment:production",
   "audiences": ["api://AzureADTokenExchange"]
 }' -o none
 SP_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
@@ -570,7 +570,7 @@ az role assignment create --assignee-object-id "$(az identity show -g mike-gordi
   --assignee-principal-type ServicePrincipal --role AcrPull --scope "$(az acr show -n mikegordievskypersonalbrand --query id -o tsv)"
 
 APP_ID=$(az ad app create --display-name gh-oidc-mike-profile-deploy --query appId -o tsv); az ad sp create --id "$APP_ID"
-az ad app federated-credential create --id "$APP_ID" --parameters '{"name":"gh-environment-production","issuer":"https://token.actions.githubusercontent.com","subject":"repo:EUHUB-AI@248672290/profile@1105616066:environment:production","audiences":["api://AzureADTokenExchange"]}'
+az ad app federated-credential create --id "$APP_ID" --parameters '{"name":"gh-environment-production","issuer":"https://token.actions.githubusercontent.com","subject":"repo:EUHUB-AI/profile:environment:production","audiences":["api://AzureADTokenExchange"]}'
 SP_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
 az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal --role Contributor --scope "$(az group show -n mike-gordievsky --query id -o tsv)"
 az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal --role AcrPush --scope "$(az acr show -n mikegordievskypersonalbrand --query id -o tsv)"

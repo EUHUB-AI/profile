@@ -85,7 +85,7 @@ npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
 - **Pipeline:** lint, types and tests → build and push to ACR (OIDC login, no stored secrets) → apply `infra/main.bicep` → grant AcrPull.
 - **Output:** the run summary and the GitHub `production` environment show the app's Azure-generated URL (`*.azurecontainerapps.io`).
 - **Not done yet** (steps in `infra/README.md`):
-  - the Azure app registration and its OIDC credential (subject `repo:EUHUB-AI@248672290/profile@1105616066:environment:production`)
+  - the Azure app registration and its OIDC credential (subject `repo:EUHUB-AI/profile:environment:production`)
   - role assignments
   - the GitHub `production` environment and its variables
   - the first manual run
