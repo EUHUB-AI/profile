@@ -1,5 +1,7 @@
 # Deploy to RG mike-gordievsky Implementation Plan
 
+> Superseded on 2026-09-28 by `2026-09-28-azure-container-apps-deploy.md`, which was executed.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deploy the profile site as an Azure Container App in resource group `mike-gordievsky`, reachable first on its Azure-generated `*.azurecontainerapps.io` URL and then on `https://mike.euhub.co`.
