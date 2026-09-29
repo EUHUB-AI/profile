@@ -1,5 +1,7 @@
 # Azure Container Apps Deploy Implementation Plan
 
+> **Status (2026-09-29): executed.** Live at https://mike.euhub.co. Task 1 was done by hand in the Azure portal (the local `az` session lacked rights); the federated credential subject ended up as `repo:EUHUB-AI/profile:environment:production`, not the immutable-ID form written below. See `docs/CONTEXT.md` for the current state.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Get the profile site running as Azure Container App `mike-profile-web` in resource group `mike-gordievsky`, first on its Azure-generated URL and then on `https://mike.euhub.co`, deployed by the manual GitHub Actions workflow.
