@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Static guardrails for the deploy workflow: manual-only trigger, RG mike-gordievsky,
-# no leftovers from the old rg-euhub-prod-apps setup, no role assignments in the pipeline.
+# Static guardrails for the deploy workflow: manual-only trigger, the shared EUHub
+# platform (rg-euhub-prod-apps / cae-euhub-prod / acreuhubprod), the SITE_INDEXABLE
+# build arg, and no leftovers from the abandoned mike-gordievsky retarget.
 set -euo pipefail
 wf=".github/workflows/deploy.yml"
 fail() { echo "FAIL: $1"; exit 1; }
@@ -12,10 +13,10 @@ triggers = doc.get(True, doc.get("on"))
 sys.exit(0 if list(triggers) == ["workflow_dispatch"] else 1)
 PY
 
-grep -q "AZURE_RESOURCE_GROUP: mike-gordievsky" "$wf" || fail "resource group must be mike-gordievsky"
-grep -q "ACR_NAME: mikegordievskypersonalbrand" "$wf" || fail "registry must be mikegordievskypersonalbrand"
+grep -q "AZURE_RESOURCE_GROUP: rg-euhub-prod-apps" "$wf" || fail "resource group must be rg-euhub-prod-apps"
+grep -q "CONTAINER_APP_NAME: ca-euhub-mike-web" "$wf" || fail "container app must be ca-euhub-mike-web"
 grep -q "SITE_INDEXABLE=" "$wf" || fail "build must pass the SITE_INDEXABLE build arg"
-! grep -qE "rg-euhub-prod|acreuhubprod|cae-euhub-prod|AZURE_ACR_NAME|AZURE_CONTAINER_APPS_ENVIRONMENT|role assignment" "$wf" \
-  || fail "old rg-euhub-prod setup or role-assignment step still referenced"
+grep -q "Grant AcrPull to an existing Container App before deploying" "$wf" || fail "pre-deploy AcrPull grant missing"
+! grep -qE "mike-gordievsky|mikegordievskypersonalbrand|personal-brand" "$wf" || fail "mike-gordievsky retarget still referenced"
 grep -q "infra/main.bicep" "$wf" || fail "workflow must deploy infra/main.bicep"
 echo "workflow checks passed"

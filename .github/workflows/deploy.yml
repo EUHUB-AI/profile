@@ -9,15 +9,15 @@ on:
         type: boolean
         default: false
 
-# id-token: write lets azure/login exchange GitHub's OIDC token for an Azure one;
-# no client secret is stored anywhere.
+# id-token: write is what lets azure/login exchange GitHub's OIDC token for
+# an Azure one — no stored client secret anywhere in this repo.
 permissions:
   id-token: write
   contents: read
 
 env:
-  AZURE_RESOURCE_GROUP: mike-gordievsky
-  ACR_NAME: mikegordievskypersonalbrand
+  AZURE_RESOURCE_GROUP: rg-euhub-prod-apps
+  CONTAINER_APP_NAME: ca-euhub-mike-web
   IMAGE_REPOSITORY: mike-profile-web
 
 jobs:
@@ -40,7 +40,8 @@ jobs:
   build-and-push-image:
     needs: build-and-test
     runs-on: ubuntu-latest
-    # Same "production" environment as deploy, so one federated credential covers both jobs.
+    # Same "production" GitHub Environment as the deploy job below, so one
+    # OIDC federated credential covers both Azure-touching jobs.
     environment: production
     outputs:
       image_tag: ${{ steps.vars.outputs.image_tag }}
@@ -56,7 +57,7 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - run: az acr login --name ${{ env.ACR_NAME }}
+      - run: az acr login --name ${{ vars.AZURE_ACR_NAME }}
 
       - uses: docker/setup-buildx-action@v4
 
@@ -67,8 +68,8 @@ jobs:
           build-args: |
             SITE_INDEXABLE=${{ inputs.site_indexable }}
           tags: |
-            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_REPOSITORY }}:${{ steps.vars.outputs.image_tag }}
-            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_REPOSITORY }}:latest
+            ${{ vars.AZURE_ACR_NAME }}.azurecr.io/${{ env.IMAGE_REPOSITORY }}:${{ steps.vars.outputs.image_tag }}
+            ${{ vars.AZURE_ACR_NAME }}.azurecr.io/${{ env.IMAGE_REPOSITORY }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -77,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: ${{ steps.deploy.outputs.url }}
+      url: ${{ steps.deploy.outputs.fqdn }}
     steps:
       - uses: actions/checkout@v7
 
@@ -87,29 +88,66 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      # A new revision pulls its image as soon as the template applies, so an
+      # app that already exists (for example after a failed first deploy) must
+      # hold AcrPull before the deployment rather than after it.
+      - name: Grant AcrPull to an existing Container App before deploying
+        run: |
+          set -euo pipefail
+          PRINCIPAL_ID=$(az containerapp show --name "${{ env.CONTAINER_APP_NAME }}" --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --query identity.principalId -o tsv 2>/dev/null || true)
+          if [ -z "$PRINCIPAL_ID" ]; then
+            echo "Container App not created yet — the grant after deployment covers it."
+            exit 0
+          fi
+          ACR_ID=$(az acr show --name "${{ vars.AZURE_ACR_NAME }}" --query id -o tsv)
+          existing=$(az role assignment list --assignee "$PRINCIPAL_ID" --scope "$ACR_ID" \
+            --query "[?roleDefinitionName=='AcrPull'] | length(@)" -o tsv)
+          if [ "$existing" = "0" ]; then
+            az role assignment create --assignee "$PRINCIPAL_ID" --role "AcrPull" --scope "$ACR_ID"
+          else
+            echo "AcrPull already granted on this registry — skipping."
+          fi
+
       - id: deploy
         run: |
           set -euo pipefail
-          # Unique --name per run: a cancelled run's ARM deployment can keep running
-          # server-side and would block the next one under a shared name.
+          # Unique --name per run: a cancelled run's ARM deployment can keep
+          # running server-side and would block the next one under a shared name.
           result=$(az deployment group create \
             --name "mike-profile-${{ github.run_id }}" \
             --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
             --template-file infra/main.bicep \
             --parameters infra/main.parameters.json \
             --parameters \
-              acrName="${{ env.ACR_NAME }}" \
+              containerAppName="${{ env.CONTAINER_APP_NAME }}" \
+              containerAppsEnvironmentName="${{ vars.AZURE_CONTAINER_APPS_ENVIRONMENT }}" \
+              acrName="${{ vars.AZURE_ACR_NAME }}" \
               imageRepository="${{ env.IMAGE_REPOSITORY }}" \
               imageTag="${{ needs.build-and-push-image.outputs.image_tag }}" \
             --query properties.outputs \
             --output json)
           echo "fqdn=https://$(echo "$result" | jq -r .fqdn.value)" >> "$GITHUB_OUTPUT"
-          echo "url=$(echo "$result" | jq -r .url.value)" >> "$GITHUB_OUTPUT"
+          echo "principal_id=$(echo "$result" | jq -r .containerAppPrincipalId.value)" >> "$GITHUB_OUTPUT"
+          echo "acr_id=$(echo "$result" | jq -r .acrId.value)" >> "$GITHUB_OUTPUT"
+
+      # Done as a CLI call rather than in main.bicep: the pipeline identity only
+      # holds RBAC Administrator on the ACR itself, not on the platform RG.
+      - name: Grant AcrPull to the Container App's identity
+        run: |
+          set -euo pipefail
+          PRINCIPAL_ID="${{ steps.deploy.outputs.principal_id }}"
+          ACR_ID="${{ steps.deploy.outputs.acr_id }}"
+          existing=$(az role assignment list --assignee "$PRINCIPAL_ID" --scope "$ACR_ID" \
+            --query "[?roleDefinitionName=='AcrPull'] | length(@)" -o tsv)
+          if [ "$existing" = "0" ]; then
+            az role assignment create --assignee "$PRINCIPAL_ID" --role "AcrPull" --scope "$ACR_ID"
+          else
+            echo "AcrPull already granted to $PRINCIPAL_ID on this registry — skipping."
+          fi
 
       - run: |
           {
-            echo "Deployed → ${{ steps.deploy.outputs.url }}"
-            echo ""
-            echo "Azure URL: ${{ steps.deploy.outputs.fqdn }}"
+            echo "Deployed → ${{ steps.deploy.outputs.fqdn }}"
             echo "Indexable: ${{ inputs.site_indexable }}"
           } >> "$GITHUB_STEP_SUMMARY"
