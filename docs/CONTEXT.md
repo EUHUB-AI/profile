@@ -55,6 +55,7 @@ npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
   - Shared pieces: Markdown, SampleTag, Meter, StatusDot, Sparkline.
 - `docs/superpowers/specs/2026-09-24-ops-tools-redesign-design.md`: the design spec. Colors, type, copy rules, content model.
 - `docs/superpowers/plans/2026-09-24-ops-tools-redesign.md`: the 11-task plan used to build it. Its deployment notes predate the Azure switch.
+- `docs/superpowers/plans/2026-09-28-azure-container-apps-deploy.md`: the deployment plan that was executed (setup done by hand in the portal, PRs #3 and #4). `2026-09-25-deploy-mike-gordievsky.md` is the superseded first draft.
 - `infra/` and `.github/workflows/deploy.yml`: the Azure deployment (next section).
 
 ## Design rules worth remembering
@@ -110,6 +111,10 @@ npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
 
 ## Open items / backlog
 
+- **Rotate the leaked service principal secret.** On the dell machine, `~/.zsh_history` holds an `az login --service-principal` line with the secret of principal `72fa1486-fa27-4258-8747-d6758943dca1` (Contributor on `rg-lkwc-engine-prod`, unrelated to this site). Rotate it in Entra and delete the line.
+- **Decide whether the site needs a real wall.** It is hidden from crawlers by robots rules only (see Deployment). A scraper that ignores them, or anyone with the link, still gets in. Options: Container Apps built-in auth with Entra (recommended, one Bicep change) or an ingress IP allowlist. Not requested yet.
+- **Going public later.** Replace the sample content first, then run the deploy workflow with `site_indexable` ticked. Also confirm `siteUrl` in `content/profile.md` (currently `https://mike.euhub.co`) and re-check robots.txt and the sitemap on the live site.
+- **Unused GitHub variables.** `AZURE_ACR_NAME` and `AZURE_CONTAINER_APPS_ENVIRONMENT` on the `production` environment are leftovers from the abandoned shared-platform setup. The workflow ignores them, so delete them when convenient.
 - **Replace sample content.** Books, travel, languages, sport and hobbies are placeholders with `sample: true`, and they show a `sample` tag. `grep -rl "sample: true" content/` lists them. Career and profile are real data.
 - **Confirm the travel origin.** `home` is set to Bratislava, a guess from the +421 phone number.
 - **Phone layout:** the intro lines wrap unevenly at 390px. Smaller intro text or no-wrap values would fix it.
@@ -123,6 +128,13 @@ npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
 
 ## Gotchas learned
 
+- **Azure from this machine.** The dell machine's `az` session is a service principal with no rights on `mike-gordievsky` and no Graph rights, so it cannot create identities, app registrations or role assignments. Check `az account show --query user.type` first; it must say `user`. Azure commands for this app run from Mike's home machine or the portal.
+- **Claude can't write GitHub settings.** Creating the `production` environment and setting its variables is blocked by the session's permission classifier. Hand Mike the exact `gh` commands instead.
+- **OIDC subject form.** GitHub presents `repo:EUHUB-AI/profile:environment:production`, the plain-name form. The immutable-ID form (`repo:EUHUB-AI@<orgid>/profile@<repoid>:...`) fails with `AADSTS700213`. In the portal, pick "GitHub Actions deploying Azure resources" and type only the plain org, repo and environment names.
+- **Redeploys must keep the domain.** A Bicep PUT overwrites `ingress.customDomains`. `mike.euhub.co` and its certificate `mc-personal-brand-mike-euhub-co-5112` are recorded in `infra/main.parameters.json`; if the domain is ever rebound, update the certificate name there.
+- **`gh pr edit` fails** with a Projects (classic) GraphQL error. Use `gh api -X PATCH repos/EUHUB-AI/profile/pulls/<n>` instead.
+- **Fresh checkout has no `node_modules`.** Run `npm ci` before `npx eslint . && npx tsc --noEmit && npm test && npm run build`.
+- **Superpowers plugin** (`superpowers@superpowers-marketplace` 6.4.2) is installed at user scope on the dell machine. The deploy plan was written with its `writing-plans` skill and run with `executing-plans`. A plugin installed mid-session isn't in that session's skill list; start a new session or read the `SKILL.md` directly under `~/.claude/plugins/cache/superpowers-marketplace/superpowers/`.
 - In zsh, never name a shell variable `path`: it's tied to `$PATH` and breaks every command after it.
 - Headless Chrome screenshots default to the light (`printout`) theme.
   - Use `google-chrome --headless=new --window-size=2560,1440 --screenshot=… http://localhost:3000/`.
