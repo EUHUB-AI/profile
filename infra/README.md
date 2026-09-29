@@ -1,69 +1,46 @@
 # Deploying the profile to Azure Container Apps
 
-Same setup as `EUHUB-AI/OminusMTE`: one Container App (`ca-euhub-mike-web`) in `rg-euhub-prod-apps`, running inside the shared Container Apps Environment (`cae-euhub-prod`) and pulling from the shared registry (`acreuhubprod`). Both of those live in `rg-euhub-prod-platform`.
+The site runs as Container App **`mike-profile-web`** in resource group **`mike-gordievsky`** (westeurope, subscription EUHub). It shares that group's existing Container Apps environment (`personal-brand-analytics-env`) and registry (`mikegordievskypersonalbrand`) with the personal-brand apps, and doesn't touch them.
 
-Deploys are **manual**: GitHub → Actions → **Deploy to Azure Container Apps** → **Run workflow**, or `gh workflow run deploy.yml --ref main -f site_indexable=false`. Pushing to `main` deploys nothing.
+Deploys are **manual**: GitHub → Actions → **Deploy to Azure Container Apps** → **Run workflow**, or `gh workflow run deploy.yml --ref main`. The run summary and the repo's **production** environment show the live URL. Pushing to `main` deploys nothing.
 
 The workflow has one input, **`site_indexable`** (default off). Leave it off while sample content is live: the site then sends `noindex` headers and an empty sitemap. Turn it on for a deploy once the content is real.
 
-## What's here
+## Pieces
 
-- **`Dockerfile`**: multi-stage bun build of the Next.js standalone server, listening on port 3000. `content/` is copied into the image because the server reads the Markdown at request time for 404 pages.
-- **`infra/main.bicep`**: creates or updates the Container App inside the **existing** environment and registry. It doesn't create those.
-- **`.github/workflows/deploy.yml`**: lint, types, tests and `infra/check-workflow.sh` → build and push the image to ACR → grant AcrPull to an already-existing app → apply the Bicep template → grant the new app AcrPull. It logs in to Azure with OIDC, so no client secret is stored in GitHub. Same shape as `EUHUB-AI/Ominus`.
-- **`infra/check-workflow.sh`**: static guardrails for the workflow (manual trigger only, correct targets, the `SITE_INDEXABLE` build arg, the pre-deploy AcrPull grant).
+- `Dockerfile`: bun build of the Next.js standalone server on port 3000. It includes `content/`, which request-time 404 pages read.
+- `infra/main.bicep`: the Container App: external HTTPS ingress, probes on `/robots.txt`, 0.25 vCPU / 0.5Gi, 1–3 replicas. Its image pull uses the user-assigned identity `mike-profile-web-identity`.
+- `.github/workflows/deploy.yml`: lint, types, tests and `infra/check-workflow.sh` → push the image to ACR → apply the Bicep template.
+- `infra/check-workflow.sh`: static guardrails for the workflow (manual trigger only, correct targets, no role assignments).
 
-The deploy job prints the app's Azure-generated URL (`https://ca-euhub-mike-web.<env-id>.germanywestcentral.azurecontainerapps.io`) in the run summary. The same link appears on the repo's **production** environment page.
+## One-time setup (done 2026-09-28)
 
-## One-time setup
-
-`EUHUB-AI/Ominus` already deploys to this platform through app registration **`6b7c60ef-1d2e-479a-8b4a-bdc2d3ac54d4`** (tenant `8c4f47c0-d3cc-4c9c-bc45-39bbf0eb18be`), which holds Contributor on `rg-euhub-prod-apps`, AcrPush on the registry and the role needed to grant AcrPull. This repo reuses that identity: it only needs its own federated credential and the same five GitHub variables.
-
-### 1. Federated credential on the shared app registration
-
-Run by an owner of that app registration (or an Application Administrator):
+Everything below already exists. Keep it for rebuilding from scratch. Run with an account that has Owner on EUHub.
 
 ```bash
-az ad app federated-credential create --id 6b7c60ef-1d2e-479a-8b4a-bdc2d3ac54d4 --parameters '{
-  "name": "gh-profile-environment-production",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:EUHUB-AI@248672290/profile@1105616066:environment:production",
-  "audiences": ["api://AzureADTokenExchange"]
-}'
-```
+az account set --subscription 42d3345a-2568-48e0-a414-3fc00ee2cba7
 
-EUHUB-AI uses GitHub's immutable-ID OIDC subjects, so the subject carries the org and repo IDs. If `azure/login` still fails with `AADSTS700213`, copy the exact subject from that run's log and run `az ad app federated-credential update` to match it.
+az identity create -g mike-gordievsky -n mike-profile-web-identity -l westeurope
+az role assignment create --assignee-object-id "$(az identity show -g mike-gordievsky -n mike-profile-web-identity --query principalId -o tsv)" \
+  --assignee-principal-type ServicePrincipal --role AcrPull --scope "$(az acr show -n mikegordievskypersonalbrand --query id -o tsv)"
 
-### 2. GitHub environment and variables
+APP_ID=$(az ad app create --display-name gh-oidc-mike-profile-deploy --query appId -o tsv); az ad sp create --id "$APP_ID"
+az ad app federated-credential create --id "$APP_ID" --parameters '{"name":"gh-environment-production","issuer":"https://token.actions.githubusercontent.com","subject":"repo:EUHUB-AI@248672290/profile@1105616066:environment:production","audiences":["api://AzureADTokenExchange"]}'
+SP_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
+az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal --role Contributor --scope "$(az group show -n mike-gordievsky --query id -o tsv)"
+az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal --role AcrPush --scope "$(az acr show -n mikegordievskypersonalbrand --query id -o tsv)"
 
-Create an environment named `production` (Repo → Settings → Environments), then set these **environment variables**, the same values as on `EUHUB-AI/Ominus`. They're identifiers, not secrets:
-
-```bash
 gh api -X PUT repos/EUHUB-AI/profile/environments/production
-gh variable set AZURE_CLIENT_ID --env production --repo EUHUB-AI/profile --body 6b7c60ef-1d2e-479a-8b4a-bdc2d3ac54d4
-gh variable set AZURE_TENANT_ID --env production --repo EUHUB-AI/profile --body 8c4f47c0-d3cc-4c9c-bc45-39bbf0eb18be
+gh variable set AZURE_CLIENT_ID --env production --repo EUHUB-AI/profile --body "$APP_ID"
+gh variable set AZURE_TENANT_ID --env production --repo EUHUB-AI/profile --body "$(az account show --query tenantId -o tsv)"
 gh variable set AZURE_SUBSCRIPTION_ID --env production --repo EUHUB-AI/profile --body 42d3345a-2568-48e0-a414-3fc00ee2cba7
-gh variable set AZURE_ACR_NAME --env production --repo EUHUB-AI/profile --body acreuhubprod
-gh variable set AZURE_CONTAINER_APPS_ENVIRONMENT --env production --repo EUHUB-AI/profile --body cae-euhub-prod
 ```
 
-### 3. First deploy
+If `azure/login` fails with `AADSTS700213`, copy the exact subject from the failed run's log and run `az ad app federated-credential update --id "$APP_ID" --federated-credential-id gh-environment-production --parameters '{"subject":"<exact subject>"}'`.
 
-Actions → **Deploy to Azure Container Apps** → **Run workflow** on `main` with `site_indexable` off. When the run finishes, open the URL shown in its summary.
+## Custom domain
 
-## Custom domain: mike.euhub.co
+`mike.euhub.co` is bound with a managed certificate and recorded in `infra/main.parameters.json` (`customDomainName`, `customDomainCertificateName`). Keep those two values: without them the next deploy removes the domain from the app. DNS for `euhub.co` is on Google Cloud DNS, edited by hand:
 
-`content/profile.md` already has `siteUrl: https://mike.euhub.co`, which drives the sitemap, robots.txt and page metadata. To serve the site on that domain once the app exists:
-
-```bash
-FQDN=$(az containerapp show -n ca-euhub-mike-web -g rg-euhub-prod-apps --query properties.configuration.ingress.fqdn -o tsv)
-VERIFY=$(az containerapp show -n ca-euhub-mike-web -g rg-euhub-prod-apps --query properties.customDomainVerificationId -o tsv)
-ENV_ID=$(az containerapp env show -n cae-euhub-prod -g rg-euhub-prod-platform --query id -o tsv)
-# DNS for euhub.co:  CNAME  mike        -> $FQDN
-#                    TXT    asuid.mike  -> $VERIFY
-az containerapp hostname add  -n ca-euhub-mike-web -g rg-euhub-prod-apps --hostname mike.euhub.co
-az containerapp hostname bind -n ca-euhub-mike-web -g rg-euhub-prod-apps --hostname mike.euhub.co \
-  --environment "$ENV_ID" --validation-method CNAME
-```
-
-`hostname bind` also issues a free managed TLS certificate.
+- `CNAME mike` → the app's Azure hostname
+- `TXT asuid.mike` → the app's `customDomainVerificationId`
