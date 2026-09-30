@@ -3,7 +3,7 @@ import type { Book } from '@/lib/content/collections';
 import { groupBooks, relatedBooks } from './books';
 
 function book(slug: string, fields: Partial<Book> & Pick<Book, 'status'>): Book {
-  return { slug, title: slug, author: 'A', tags: [], sample: false, body: '', ...fields };
+  return { slug, title: slug, author: 'A', languages: ['EN'], titleIsTranslation: false, tags: [], sample: false, body: '', ...fields };
 }
 
 describe('groupBooks', () => {
@@ -14,6 +14,16 @@ describe('groupBooks', () => {
       book('r2', { status: 'reading', progress: 70 }),
     ]);
     expect(groups.running.map((b) => b.slug)).toEqual(['r2', 'r1', 'p']);
+  });
+
+  it('puts finished books without a date in their own group, by title', () => {
+    const groups = groupBooks([
+      book('z', { status: 'finished', title: 'Zed' }),
+      book('dated', { status: 'finished', finished: '2026-03' }),
+      book('a', { status: 'finished', title: 'Alpha' }),
+    ]);
+    expect(groups.finishedEarlier.map((b) => b.slug)).toEqual(['a', 'z']);
+    expect(groups.finishedByYear.map(([year]) => year)).toEqual(['2026']);
   });
 
   it('groups finished books by year, newest year and newest book first', () => {
@@ -37,7 +47,7 @@ describe('groupBooks', () => {
   });
 
   it('returns empty groups when there are no books', () => {
-    expect(groupBooks([])).toEqual({ running: [], finishedByYear: [], queued: [] });
+    expect(groupBooks([])).toEqual({ running: [], finishedByYear: [], finishedEarlier: [], queued: [] });
   });
 });
 

@@ -27,7 +27,7 @@ Mike G.'s personal site (SRE & Dev/AI/Sec Ops Architect). It's styled as a retro
 
 ```bash
 npm run dev      # http://localhost:3000
-npm test         # 83 unit tests + validation of every file in content/
+npm test         # 90 unit tests + validation of every file in content/
 npx eslint . && npx tsc --noEmit
 npm run build    # safe while dev runs: Next 16 keeps dev output in .next/dev
 ```

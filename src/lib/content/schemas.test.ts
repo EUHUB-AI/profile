@@ -42,7 +42,7 @@ describe('date fields', () => {
 });
 
 describe('bookSchema', () => {
-  const base = { title: 'T', author: 'A' };
+  const base = { title: 'T', author: 'A', languages: ['EN'] };
 
   it('requires progress for books being read', () => {
     const result = bookSchema.safeParse({ ...base, status: 'reading' });
@@ -50,14 +50,30 @@ describe('bookSchema', () => {
     expect(result.error?.issues[0].path).toEqual(['progress']);
   });
 
-  it('requires a finished date for finished books', () => {
-    const result = bookSchema.safeParse({ ...base, status: 'finished' });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues[0].path).toEqual(['finished']);
+  it('accepts a finished book without a date', () => {
+    expect(bookSchema.safeParse({ ...base, status: 'finished' }).success).toBe(true);
+  });
+
+  it('takes an optional title as read and flags catalog translations', () => {
+    const parsed = bookSchema.parse({ ...base, status: 'queued', readTitle: 'Cudzinec', titleIsTranslation: true });
+    expect(parsed).toMatchObject({ readTitle: 'Cudzinec', titleIsTranslation: true });
+    expect(bookSchema.parse({ ...base, status: 'queued' }).titleIsTranslation).toBe(false);
   });
 
   it('rejects progress above 100', () => {
     expect(bookSchema.safeParse({ ...base, status: 'reading', progress: 120 }).success).toBe(false);
+  });
+
+  it('requires at least one language', () => {
+    const result = bookSchema.safeParse({ title: 'T', author: 'A', status: 'queued' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(['languages']);
+    expect(bookSchema.safeParse({ ...base, languages: [], status: 'queued' }).success).toBe(false);
+  });
+
+  it('accepts EN, RU, UA and SK and rejects anything else', () => {
+    expect(bookSchema.safeParse({ ...base, languages: ['EN', 'RU', 'UA', 'SK'], status: 'queued' }).success).toBe(true);
+    expect(bookSchema.safeParse({ ...base, languages: ['DE'], status: 'queued' }).success).toBe(false);
   });
 
   it('defaults tags and sample', () => {

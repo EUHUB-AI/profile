@@ -29,6 +29,14 @@ const handle = z.string().regex(/^[a-z][a-z0-9-]*$/, 'use lowercase letters, dig
 export const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 const cefr = z.enum(CEFR);
 
+export const BOOK_LANGUAGES = ['EN', 'RU', 'UA', 'SK'] as const;
+export const BOOK_LANGUAGE_NAMES: Record<(typeof BOOK_LANGUAGES)[number], string> = {
+  EN: 'English',
+  RU: 'Russian',
+  UA: 'Ukrainian',
+  SK: 'Slovak',
+};
+
 export const profileSchema = z.object({
   name: z.string().min(1),
   handle,
@@ -57,6 +65,10 @@ export const careerSchema = z.object({
 export const bookSchema = z
   .object({
     title: z.string().min(1),
+    // The title on the copy I read, when it differs from `title`.
+    readTitle: z.string().min(1).optional(),
+    // True when `title` is a catalog translation rather than an official published title.
+    titleIsTranslation: z.boolean().default(false),
     author: z.string().min(1),
     status: z.enum(['reading', 'paused', 'finished', 'queued']),
     progress: z.number().int().min(0).max(100).optional(),
@@ -64,15 +76,13 @@ export const bookSchema = z
     finished: yearMonth.optional(),
     rating: z.number().int().min(1).max(5).optional(),
     published: z.number().int().optional(),
+    languages: z.array(z.enum(BOOK_LANGUAGES)).min(1, 'list the language(s) you read it in: EN, RU, UA, SK'),
     tags: z.array(z.string()).default([]),
     sample,
   })
   .superRefine((book, ctx) => {
     if ((book.status === 'reading' || book.status === 'paused') && book.progress === undefined) {
       ctx.addIssue({ code: 'custom', path: ['progress'], message: `${book.status} books need progress (0-100)` });
-    }
-    if (book.status === 'finished' && !book.finished) {
-      ctx.addIssue({ code: 'custom', path: ['finished'], message: 'finished books need a finished date (YYYY-MM)' });
     }
   });
 

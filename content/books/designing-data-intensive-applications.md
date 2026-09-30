@@ -5,6 +5,7 @@ status: reading
 progress: 68
 started: "2026-07"
 published: 2017
+languages: [EN]
 tags: [distributed-systems, databases]
 sample: true
 ---

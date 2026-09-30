@@ -5,6 +5,7 @@ status: finished
 finished: "2025-11"
 rating: 4
 published: 2013
+languages: [RU]
 tags: [devops, operations]
 sample: true
 ---
