@@ -5,9 +5,9 @@ import { summarize } from './motd';
 describe('summarize', () => {
   it('summarizes every section', () => {
     const books: Book[] = [
-      { slug: 'a', title: 'A', author: 'x', status: 'reading', progress: 40, started: '2026-01', tags: [], sample: false, body: '' },
-      { slug: 'b', title: 'B', author: 'x', status: 'reading', progress: 10, started: '2026-08', tags: [], sample: true, body: '' },
-      { slug: 'c', title: 'C', author: 'x', status: 'finished', finished: '2025-01', tags: [], sample: false, body: '' },
+      { slug: 'a', title: 'A', author: 'x', languages: ['EN'], titleIsTranslation: false, status: 'reading', progress: 40, started: '2026-01', tags: [], sample: false, body: '' },
+      { slug: 'b', title: 'B', author: 'x', languages: ['EN'], titleIsTranslation: false, status: 'reading', progress: 10, started: '2026-08', tags: [], sample: true, body: '' },
+      { slug: 'c', title: 'C', author: 'x', languages: ['EN'], titleIsTranslation: false, status: 'finished', finished: '2025-01', tags: [], sample: false, body: '' },
     ];
     const trips: Trip[] = [
       { slug: 't1', title: 'T1', country: 'Japan', countryCode: 'JP', start: '2025-04', cities: [{ name: 'Tokyo', lat: 35.7, lng: 139.7 }], sample: false, body: '' },

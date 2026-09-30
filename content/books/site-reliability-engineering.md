@@ -5,6 +5,7 @@ status: finished
 finished: "2026-03"
 rating: 5
 published: 2016
+languages: [EN]
 tags: [sre, operations]
 sample: true
 ---

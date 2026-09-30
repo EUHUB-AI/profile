@@ -7,7 +7,7 @@ import { bootScript } from '@/lib/theme';
 import './globals.css';
 
 const martian = Martian_Mono({
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
   axes: ['wdth'],
   variable: '--font-martian',
   display: 'swap',

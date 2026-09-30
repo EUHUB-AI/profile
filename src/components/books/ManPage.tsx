@@ -3,16 +3,20 @@ import { Markdown } from '@/components/Markdown';
 import { SampleTag } from '@/components/SampleTag';
 import { Prompt } from '@/components/shell/Prompt';
 import type { Book } from '@/lib/content/collections';
+import { languageNames } from '@/lib/tui/books';
 
 export function ManPage({ book, related, host }: { book: Book; related: Book[]; host: string }) {
   const name = `${book.slug}(7)`;
   const synopsis: [string, string][] = [['status', book.status]];
+  if (book.readTitle && book.readTitle !== book.title) synopsis.push(['read as', book.readTitle]);
+  synopsis.push(['language', languageNames(book)]);
   if (book.progress !== undefined && book.status !== 'finished') synopsis.push(['progress', `${book.progress}%`]);
   if (book.started) synopsis.push(['started', book.started]);
   if (book.finished) synopsis.push(['finished', book.finished]);
   if (book.rating) synopsis.push(['rating', `${book.rating}/5`]);
   if (book.published) synopsis.push(['published', String(book.published)]);
   if (book.tags.length > 0) synopsis.push(['tags', book.tags.join(', ')]);
+  if (book.titleIsTranslation) synopsis.push(['note', 'English title is a catalog translation, not an official edition']);
 
   return (
     <article className="man">
